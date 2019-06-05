@@ -1,0 +1,66 @@
+---
+
+- name: install sssd package
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - sssd-ldap
+      - libselinux-python
+  tags: sssd
+
+- name: install MACC CA
+  copy:
+    content: "{{ sssd_ca_src }}"
+    dest: "{{ sssd_ca_dest }}"
+    owner: root
+    group: root
+    mode: 0644
+  register: result
+  tags: sssd
+
+- name: update ca-trust
+  command: update-ca-trust
+  when: result.changed
+  tags: sssd
+
+- name: configure LDAP authentication
+  shell: |
+    authconfig --enablesssd --enablesssdauth --enablemkhomedir --update
+    touch /etc/sssd/.ansible
+  args:
+    creates: /etc/sssd/.ansible
+  tags: sssd
+
+- name: copy sssd configuration
+  template:
+    src: sssd.conf
+    dest: /etc/sssd/sssd.conf
+    owner: root
+    group: root
+    mode: 0600
+  notify: restart sssd
+  tags: sssd
+
+- name: configure sshd for retirving keys via sssd
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    line: "{{ item }}"
+  notify: restart sshd
+  loop:
+    - 'AuthorizedKeysCommand /usr/bin/sss_ssh_authorizedkeys'
+    - 'AuthorizedKeysCommandUser nobody'
+  tags: sssd
+
+- name: enable sudo in nsswitch
+  lineinfile:
+    path: /etc/nsswitch.conf
+    line: 'sudoers:    files sss'
+  tags: sssd
+
+- name: start services
+  service:
+    name: sssd
+    state: started
+    enabled: yes
+  tags: sssd

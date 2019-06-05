@@ -1,0 +1,36 @@
+---
+
+sssd_ca_src: 'ca contents'
+sssd_ca_dest: /etc/pki/ca-trust/source/anchors/ca.pem
+sssd_domain: default
+sssd_services: autofs, nss, pam, ssh, sudo
+
+sssd_domain_config:
+  autofs_provider: ldap
+  auth_provider: ldap
+  cache_credentials: true
+  chpass_provider: ldap
+  id_provider: ldap
+  ldap_id_use_start_tls: true
+  ldap_search_base: dc=example,dc=com
+  ldap_sudo_search_base: ou=sudoers,dc=example,dc=com
+  ldap_tls_cacertdir: /etc/openldap/cacerts
+  ldap_tls_reqcert: allow
+  ldap_uri: ldap://ldap.example.com/
+  sudo_provider: ldap
+
+sssd_nss_config:
+  homedir_substring: /home
+  entry_cache_nowait_percentage: 75
+
+sssd_pam_config:
+  offline_credentials_expiration: 2
+  offline_failed_login_attempts: 3
+  offline_failed_login_delay: 5
+
+sssd_autofs_config: {}
+
+sssd_domain_config_override: {}
+sssd_nss_config_override: {}
+sssd_pam_config_override: {}
+sssd_autofs_config_override: {}

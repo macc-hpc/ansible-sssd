@@ -1,0 +1,13 @@
+---
+
+- name: restart sssd
+  service:
+    name: sssd
+    state: restarted
+  tags: sssd
+
+- name: restart sshd
+  service:
+    name: sshd
+    state: restarted
+  tags: sssd
