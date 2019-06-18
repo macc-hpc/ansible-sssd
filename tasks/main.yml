@@ -16,12 +16,12 @@
     owner: root
     group: root
     mode: 0644
-  register: result
+  register: ca_result
   tags: sssd
 
 - name: update ca-trust
   command: update-ca-trust
-  when: result.changed
+  when: ca_result.changed
   tags: sssd
 
 - name: configure LDAP authentication
@@ -39,6 +39,7 @@
     owner: root
     group: root
     mode: 0600
+  register: sssd_result
   notify: restart sssd
   tags: sssd
 
@@ -56,6 +57,13 @@
   lineinfile:
     path: /etc/nsswitch.conf
     line: 'sudoers:    files sss'
+  tags: sssd
+
+- name: force early sssd restart
+  service:
+    name: sssd
+    state: restarted
+  when: sssd_result.changed
   tags: sssd
 
 - name: start services
